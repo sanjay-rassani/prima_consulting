@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Execution History{% endblock %}
+
+{% block content %}
+    <section class="card">
+        <h2>Execution History</h2>
+        <p class="muted">Review every execution run and download the uploaded input or generated output files.</p>
+
+        {% if execution_history %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Created</th>
+                        <th>Input File</th>
+                        <th>Status</th>
+                        <th>Rows Processed</th>
+                        <th>Output Rows</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for execution in execution_history %}
+                        <tr>
+                            <td>{{ execution.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ execution.original_input_filename }}</td>
+                            <td><span class="status status-{{ execution.status }}">{{ execution.get_status_display }}</span></td>
+                            <td>{{ execution.rows_processed }}</td>
+                            <td>{{ execution.output_rows }}</td>
+                            <td>
+                                <div class="link-list">
+                                    <a href="{% url 'executions:execution_detail' execution.id %}">Details</a>
+                                    <a href="{{ execution.input_file.url }}">Download input</a>
+                                    {% if execution.output_file %}
+                                        <a href="{{ execution.output_file.url }}">Download output</a>
+                                    {% else %}
+                                        <span class="muted">No output</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="muted">No execution history yet. Process a CSV from the dashboard to create the first record.</p>
+        {% endif %}
+    </section>
+{% endblock %}

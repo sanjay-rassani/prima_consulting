@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Execution Details{% endblock %}
+
+{% block content %}
+    <section class="card">
+        <h2>Execution Details</h2>
+        <p class="muted">Summary for the selected processing run.</p>
+
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">Status</span>
+                <span class="status status-{{ execution.status }}">{{ execution.get_status_display }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Rows Processed</span>
+                <div class="summary-value">{{ execution.rows_processed }}</div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Output Rows</span>
+                <div class="summary-value">{{ execution.output_rows }}</div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Created</span>
+                <div class="summary-value">{{ execution.created_at|date:"Y-m-d H:i" }}</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Files</h2>
+        <p><strong>Input:</strong> {{ execution.original_input_filename }}</p>
+        <p><strong>Output:</strong> {{ execution.original_output_filename|default:"Not generated" }}</p>
+
+        <div class="actions">
+            <a class="button button-secondary" href="{{ execution.input_file.url }}">Download input CSV</a>
+            {% if execution.output_file %}
+                <a class="button button-secondary" href="{{ execution.output_file.url }}">Download output CSV</a>
+            {% endif %}
+            <a class="button button-secondary" href="{% url 'executions:history' %}">Back to history</a>
+        </div>
+    </section>
+
+    {% if execution.error_message %}
+        <section class="card">
+            <h2>Error Details</h2>
+            <p class="muted">{{ execution.error_message }}</p>
+        </section>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Execution Dashboard{% endblock %}
+
+{% block content %}
+    <section class="card">
+        <h2>Upload Input CSV</h2>
+        <p class="muted">This page validates the employee input CSV against the workbook contract, runs the workbook-equivalent calculations in Python, and stores the execution history.</p>
+        <p class="muted">Expected header order: <code>{{ expected_headers|join:", " }}</code></p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="field">
+                {{ form.input_file.label_tag }}
+                {{ form.input_file }}
+                {% if form.input_file.help_text %}
+                    <span class="helptext">{{ form.input_file.help_text }}</span>
+                {% endif %}
+                {{ form.input_file.errors }}
+            </div>
+            <button class="button" type="submit">Process</button>
+        </form>
+    </section>
+
+    {% if latest_execution %}
+        <section class="card">
+            <h2>Latest Execution Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Status</span>
+                    <span class="status status-{{ latest_execution.status }}">{{ latest_execution.get_status_display }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Input Rows Processed</span>
+                    <div class="summary-value">{{ latest_execution.rows_processed }}</div>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Output Rows Generated</span>
+                    <div class="summary-value">{{ latest_execution.output_rows }}</div>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Created</span>
+                    <div class="summary-value">{{ latest_execution.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+            </div>
+            <div class="actions">
+                <a class="button button-secondary" href="{% url 'executions:execution_detail' latest_execution.id %}">View details</a>
+                <a class="button button-secondary" href="{{ latest_execution.input_file.url }}">Download input CSV</a>
+                {% if latest_execution.output_file %}
+                    <a class="button button-secondary" href="{{ latest_execution.output_file.url }}">Download output CSV</a>
+                {% endif %}
+            </div>
+            {% if latest_execution.error_message %}
+                <p class="muted">Error: {{ latest_execution.error_message }}</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    <section class="card">
+        <h2>Recent Execution History</h2>
+        {% if execution_history %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Created</th>
+                        <th>Input File</th>
+                        <th>Status</th>
+                        <th>Rows Processed</th>
+                        <th>Output Rows</th>
+                        <th>Output File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for execution in execution_history %}
+                        <tr>
+                            <td>{{ execution.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {{ execution.original_input_filename }}
+                            </td>
+                            <td><span class="status status-{{ execution.status }}">{{ execution.get_status_display }}</span></td>
+                            <td>{{ execution.rows_processed }}</td>
+                            <td>{{ execution.output_rows }}</td>
+                            <td>
+                                <div class="link-list">
+                                    <a href="{% url 'executions:execution_detail' execution.id %}">Details</a>
+                                    <a href="{{ execution.input_file.url }}">Input</a>
+                                    {% if execution.output_file %}
+                                        <a href="{{ execution.output_file.url }}">Output</a>
+                                    {% else %}
+                                        <span class="muted">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="actions">
+                <a class="button button-secondary" href="{% url 'executions:history' %}">View full history</a>
+            </div>
+        {% else %}
+            <p class="muted">No execution history yet. Upload a CSV file to create the first record.</p>
+        {% endif %}
+    </section>
+{% endblock %}
